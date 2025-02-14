@@ -1,6 +1,8 @@
+import 'package:hive_ce/hive.dart';
+
 enum Categories { beauty, fragrances }
 
-class Product {
+class Product extends HiveObject {
   Product({
     required this.id,
     required this.title,

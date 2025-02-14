@@ -1,7 +1,13 @@
 import 'package:flutter/material.dart';
+import 'package:hive/hive/hive_adapters.dart';
+import 'package:hive/models/product.dart';
 import 'package:hive/views/order_page.dart';
+import 'package:hive_ce_flutter/hive_flutter.dart';
 
-void main() {
+Future<void> main() async {
+  await Hive.initFlutter();
+  Hive.registerAdapter(ProductAdapter());
+  await Hive.openBox<Product>('productBox');
   runApp(const MyApp());
 }
 
