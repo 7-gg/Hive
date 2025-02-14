@@ -1,8 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_svg/svg.dart';
 import 'package:hive/hive/hive_boxes.dart';
 import 'package:hive/models/product.dart';
-import 'package:hive_ce/hive.dart';
+import 'package:hive_ce_flutter/hive_flutter.dart';
 
 class InventoryPage extends StatefulWidget {
   const InventoryPage({super.key});
@@ -12,47 +11,77 @@ class InventoryPage extends StatefulWidget {
 }
 
 class _InventoryPageState extends State<InventoryPage> {
+  void _increment(Box<Product> productBox, Product product) {
+    product.stock++;
+    productBox.put(product.key, product);
+  }
+
+  void _decrement(Box<Product> productBox, Product product) {
+    product.stock--;
+    productBox.put(product.key, product);
+  }
+
   @override
   Widget build(BuildContext context) {
-    final products = Hive.box<Product>(productBox).values;
-    // ..
     return Scaffold(
-      appBar: AppBar(
-        title: Text('Inventory'),
+      appBar: AppBar(title: const Text('Inventory')),
+      floatingActionButton: FloatingActionButton(
+        onPressed: Hive.box<Product>(productBox).clear,
+        child: const Icon(
+          Icons.delete,
+          size: 35,
+        ),
       ),
-      body: products.isEmpty
-          ? Center(
-              child: Text('The inventory is currently empty!'),
-            )
-          : ListView.builder(
-              itemCount: products.length,
-              itemBuilder: (context, index) {
-                final product = products.toList()[index];
-                return ListTile(
-                  leading: CircleAvatar(
-                    child: SvgPicture.asset(
-                      'assets/images/product.svg',
-                      width: 25, // Width
-                      height: 30, // Height
-                    ),
+      body: ValueListenableBuilder<Box<Product>>(
+        valueListenable: Hive.box<Product>(productBox).listenable(),
+        builder: (BuildContext context, Box<Product> box, Widget? _) {
+          final products = box.values.toList();
+
+          if (products.isEmpty) {
+            return const Center(
+              child: Text('The inventory is currently empty.'),
+            );
+          }
+
+          return ListView.builder(
+            itemCount: products.length,
+            itemBuilder: (BuildContext context, int index) {
+              final product = products.toList()[index];
+
+              return Dismissible(
+                key: ValueKey(product.id),
+                onDismissed: (DismissDirection direction) =>
+                    box.delete(product.key),
+                background: const ColoredBox(color: Colors.red),
+                child: ListTile(
+                  leading: Text(
+                    product.stock.toString(),
+                    style: const TextStyle(fontSize: 20),
                   ),
                   title: Text(product.title),
-                  subtitle: Text(product.category as String),
-                  trailing: Row(
-                    children: [
-                      IconButton(
-                        icon: Icon(Icons.add),
-                        onPressed: () {},
-                      ),
-                      IconButton(
-                        icon: Icon(Icons.remove),
-                        onPressed: () {},
-                      ),
-                    ],
+                  trailing: SizedBox(
+                    width: 100,
+                    child: Row(
+                      children: [
+                        IconButton(
+                          onPressed: () => _increment(box, product),
+                          icon: const Icon(Icons.add),
+                        ),
+                        IconButton(
+                          onPressed: product.stock == 0
+                              ? null
+                              : () => _decrement(box, product),
+                          icon: const Icon(Icons.remove),
+                        ),
+                      ],
+                    ),
                   ),
-                );
-              },
-            ),
+                ),
+              );
+            },
+          );
+        },
+      ),
     );
   }
 }

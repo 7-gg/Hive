@@ -6,8 +6,14 @@ import 'package:hive_ce_flutter/hive_flutter.dart';
 
 Future<void> main() async {
   await Hive.initFlutter();
-  Hive.registerAdapter(ProductAdapter());
+
+  Hive
+    ..registerAdapter(CategoriesAdapter())
+    ..registerAdapter(ProductAdapter());
+  // Hive.registerAdapter();
+  // ..
   await Hive.openBox<Product>('productBox');
+  // ..
   runApp(const MyApp());
 }
 
@@ -17,6 +23,7 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
+      debugShowCheckedModeBanner: false,
       title: 'Hive',
       theme: ThemeData(
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
